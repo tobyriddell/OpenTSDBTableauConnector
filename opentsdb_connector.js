@@ -1,13 +1,13 @@
 (function() {
 	// TODO: Need to add more parameters here - e.g. tags (and their values), rate (true/false)
 	function buildOpenTSDBUri(metric, startTime, endTime) {
-		var uri = "http://192.168.1.8:4242/api/query?start=" + startTime
-				+ "&end=" + endTime + "&m=sum:rate:" + metric
-				+ "%7Bhost=aubergine,type=user%7D";
+		var uri = "http://127.0.0.1:4242/api/query?start=" + startTime
+				+ "&end=" + endTime + "&m=sum:rate:" + metric + "%7Bhost=*,type=user%7Csystem%7Ciowait%7D";
 		return uri;
 	}
 	
-	// Credit to Pointy (http://stackoverflow.com/questions/10073699/pad-a-number-with-leading-zeros-in-javascript)
+	// Credit to Pointy
+	// (http://stackoverflow.com/questions/10073699/pad-a-number-with-leading-zeros-in-javascript)
 	function pad(n, width, z) {
 		z = z || '0';
 		n = n + '';
@@ -15,7 +15,8 @@
 				+ n;
 	}
 
-	// Credit to shomrat (http://stackoverflow.com/questions/847185/convert-a-unix-timestamp-to-time-in-javascript)
+	// Credit to shomrat
+	// (http://stackoverflow.com/questions/847185/convert-a-unix-timestamp-to-time-in-javascript)
 	function timeConverter(UNIX_timestamp) {
 		var a = new Date(UNIX_timestamp * 1000);
 		var months = [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
@@ -43,11 +44,9 @@
 	myConnector.getTableData = function(lastRecordToken) {
 		var dataToReturn = [];
 		var hasMoreData = false;
-
 		var metric = tableau.connectionData;
-		var startTime = "2015/10/04-11:23:00";
-		var endTime = "2015/10/04-11:33:17";
-
+		var startTime = $('.start_time').val();
+		var endTime   = $('.end_time').val();
 		var connectionUri = buildOpenTSDBUri(metric, startTime, endTime);
 
 		console.log(connectionUri);
@@ -58,11 +57,14 @@
 					url : connectionUri,
 					dataType : 'json',
 					success : function(data) {
-						tableau.log(data);
-						tableau.log(data[0]);
-						tableau.log(data[0]['dps']);
+
+//						tableau.log(data);
+//						tableau.log(data[0]);
+//						tableau.log(data[0]['dps']);
+						console.log("Data: ");
 						console.log(data);
-						if (data[0]['dps']) {
+						if (data != null && data[0] != null && data[0]['dps'] != null) {
+							console.log("data is not null");
 							var timeSeries = data[0]['dps'];
 							tableau.log(timeSeries);
 							tableau.log(timeSeries.length);
