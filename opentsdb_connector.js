@@ -44,9 +44,11 @@
 	myConnector.getTableData = function(lastRecordToken) {
 		var dataToReturn = [];
 		var hasMoreData = false;
-		var metric = tableau.connectionData;
-		var startTime = $('.start_time').val();
-		var endTime   = $('.end_time').val();
+
+		var connectionData = JSON.parse(tableau.connectionData);
+		var metric    = connectionData["metric"];
+		var startTime = connectionData["startTime"];
+		var endTime   = connectionData["endTime"];
 		var connectionUri = buildOpenTSDBUri(metric, startTime, endTime);
 
 		console.log(connectionUri);
@@ -57,32 +59,17 @@
 					url : connectionUri,
 					dataType : 'json',
 					success : function(data) {
-
-//						tableau.log(data);
-//						tableau.log(data[0]);
-//						tableau.log(data[0]['dps']);
-						console.log("Data: ");
-						console.log(data);
 						if (data != null && data[0] != null && data[0]['dps'] != null) {
 							console.log("data is not null");
 							var timeSeries = data[0]['dps'];
-							tableau.log(timeSeries);
-							tableau.log(timeSeries.length);
-							tableau.log(Object.keys(timeSeries).length);
-							tableau.log(Object.keys(timeSeries));
 							for ( var i in timeSeries) {
-								tableau.log(i);
-								tableau.log(timeSeries[i]);
 								var entry = {
 									'metric' : metric,
 									'timestamp' : timeConverter(i),
 									'value' : timeSeries[i]
 								};
-								tableau.log(entry);
 								dataToReturn.push(entry);
 							}
-
-							tableau.log(dataToReturn);
 							tableau.dataCallback(dataToReturn, lastRecordToken,
 									false);
 						} else {
@@ -113,9 +100,12 @@
 $(document).ready(function() {
 	$("#submitButton").click(function() {
 		var metric = $('#metric').val().trim();
+		var startTime = $('#datetimepicker1').data('date');
+		var endTime = $('#datetimepicker2').data('date');
+
 		if (metric) {
 			tableau.connectionName = "Data for metric: " + metric;
-			tableau.connectionData = metric;
+			tableau.connectionData = JSON.stringify({'metric': metric, 'startTime': startTime, 'endTime': endTime});
 			tableau.submit();
 		}
 	});
