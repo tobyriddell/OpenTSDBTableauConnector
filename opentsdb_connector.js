@@ -88,6 +88,12 @@
 				});
 	};
 
+	myConnector.getColumnHeaders = function() {
+		var fieldNames = ['metric', 'timestamp', 'value'];
+		var fieldTypes = ['string', 'datetime', 'float'];
+		tableau.headersCallback(fieldNames, fieldTypes);
+	}
+
 	tableau.registerConnector(myConnector);
 
 	//      myConnector.init = function() {
