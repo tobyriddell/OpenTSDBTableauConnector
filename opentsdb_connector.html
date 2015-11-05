@@ -19,7 +19,7 @@
 		Start:
 	</p>
 	<div class='input-group date' id='datetimepicker1'>
-		<input type='text' class="form-control start_time" name="start_time"/>
+		<input type='text' class="form-control start_time" name="start_time" value="2015/10/28-05:45:00"/>
 		<span class="input-group-addon">
 			<span class="glyphicon glyphicon-calendar"></span>
 		</span>
@@ -27,7 +27,7 @@
 	<script type="text/javascript">
 		$(function() {
 			$('#datetimepicker1').datetimepicker({
-					format: 'YYYY/MM/DD-hh:mm:ss'
+					format: 'YYYY/MM/DD-HH:mm:ss'
 				});
 		});
 	</script>
@@ -35,7 +35,7 @@
 		End:
 	</p>
 	<div class='input-group date' id='datetimepicker2'>
-		<input type='text' class="form-control end_time" name="end_time"/>
+		<input type='text' class="form-control end_time" name="end_time" value="2015/10/28-06:15:00"/>
 		<span class="input-group-addon">
 			<span class="glyphicon glyphicon-calendar"></span>
 		</span>
@@ -43,12 +43,12 @@
 	<script type="text/javascript">
 		$(function() {
 			$('#datetimepicker2').datetimepicker({
-				format: 'YYYY/MM/DD-hh:mm:ss'
+				format: 'YYYY/MM/DD-HH:mm:ss'
 			});
 		});
 	</script>
 	<p>
-		Enter the name of the metric: <input type="text" id="metric" />
+		Enter the name of the metric: <input type="text" id="metric" value="proc.stat.cpu"/>
 	</p>
 	<p>
 		<button type="button" id="submitButton">Get the data</button>
