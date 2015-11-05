@@ -35,12 +35,6 @@
 
 	var myConnector = tableau.makeConnector();
 
-	myConnector.getColumnHeaders = function() {
-		var fieldNames = [ 'metric', 'timestamp', 'value' ];
-		var fieldTypes = [ 'string', 'double', 'double' ];
-		tableau.headersCallback(fieldNames, fieldTypes);
-	};
-
 	myConnector.getTableData = function(lastRecordToken) {
 		var dataToReturn = [];
 		var hasMoreData = false;
@@ -61,6 +55,7 @@
 					success : function(data) {
 						if (data != null && data[0] != null && data[0]['dps'] != null) {
 							console.log("data is not null");
+							console.log(data);
 							var timeSeries = data[0]['dps'];
 							for ( var i in timeSeries) {
 								var entry = {
@@ -88,6 +83,7 @@
 				});
 	};
 
+	
 	myConnector.getColumnHeaders = function() {
 		var fieldNames = ['metric', 'timestamp', 'value'];
 		var fieldTypes = ['string', 'datetime', 'float'];
