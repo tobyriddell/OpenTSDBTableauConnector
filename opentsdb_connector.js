@@ -1,3 +1,15 @@
+$(function() {
+	$('#datetimepicker1').datetimepicker({
+			format: 'YYYY/MM/DD-HH:mm:ss'
+		});
+});
+
+$(function() {
+	$('#datetimepicker2').datetimepicker({
+		format: 'YYYY/MM/DD-HH:mm:ss'
+	});
+});
+
 (function() {
 	// TODO: Need to add more parameters here - e.g. tags (and their values), rate (true/false)
 	function buildOpenTSDBUri(metric, startTime, endTime) {
