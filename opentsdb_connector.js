@@ -14,7 +14,7 @@ $(function() {
 	// TODO: Need to add more parameters here - e.g. tags (and their values), rate (true/false)
 	function buildOpenTSDBUri(metric, startTime, endTime) {
 		var uri = "http://127.0.0.1:4242/api/query?start=" + startTime
-				+ "&end=" + endTime + "&m=sum:rate:" + metric + "%7Bhost=*,type=user%7Csystem%7Ciowait%7D";
+				+ "&end=" + endTime + "&m=sum:rate:" + metric + "%7Bhost=*,type=*%7D";
 		return uri;
 	}
 	
@@ -65,20 +65,42 @@ $(function() {
 					url : connectionUri,
 					dataType : 'json',
 					success : function(data) {
-						if (data != null && data[0] != null && data[0]['dps'] != null) {
-							console.log("data is not null");
-							console.log(data);
-							var timeSeries = data[0]['dps'];
-							for ( var i in timeSeries) {
-								var entry = {
-									'metric' : metric,
-									'timestamp' : timeConverter(i),
-									'value' : timeSeries[i]
-								};
-								dataToReturn.push(entry);
+						if (data != null) {
+							for (var int = 0; int < data.length; int++) {
+								var timeseries = data[int];
+								console.log("timeseries: ");
+								console.log(timeseries);
+								console.log("timeseries metric: " + timeseries['metric']);
+
+								Object.keys(timeseries['dps']).forEach(function (key) {
+									console.log(key + ":" + timeseries['dps'][key]);
+									var entry = { 
+											'metric' : timeseries['metric'],
+											'timestamp': key,
+											'value' : timeseries['dps'][key],
+											'type' : timeseries['tags']['type']
+									}
+									dataToReturn.push(entry);
+								})
 							}
+
 							tableau.dataCallback(dataToReturn, lastRecordToken,
 									false);
+						
+//						if (data != null && data[0] != null && data[0]['dps'] != null) {
+//							console.log("data is not null");
+//							console.log(data);
+//							var timeSeries = data[0]['dps'];
+//							for ( var i in timeSeries) {
+//								var entry = {
+//									'metric' : metric,
+//									'timestamp' : timeConverter(i),
+//									'value' : timeSeries[i]
+//								};
+//								dataToReturn.push(entry);
+//							}
+//							tableau.dataCallback(dataToReturn, lastRecordToken,
+//									false);
 						} else {
 							tableau
 									.abortWithError("No results found for metric: "
@@ -97,13 +119,12 @@ $(function() {
 
 	
 	myConnector.getColumnHeaders = function() {
-		var fieldNames = ['metric', 'timestamp', 'value'];
-		var fieldTypes = ['string', 'datetime', 'float'];
+		var fieldNames = ['metric', 'timestamp', 'value', 'type'];
+		var fieldTypes = ['string', 'datetime', 'float', 'string'];
 		tableau.headersCallback(fieldNames, fieldTypes);
 	}
 
 	tableau.registerConnector(myConnector);
-
 	//      myConnector.init = function() {
 	//        tableau.initCallback;
 	//        tableau.submit;
