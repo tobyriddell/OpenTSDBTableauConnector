@@ -11,10 +11,24 @@ $(function() {
 });
 
 (function() {
-	// TODO: Need to add more parameters here - e.g. tags (and their values), rate (true/false)
-	function buildOpenTSDBUri(metric, startTime, endTime) {
+	// TODO: Need to add more parameters here - e.g. tags (and their values), rate (true/false)	
+	function buildOpenTSDBUri(metric, startTime, endTime, tags) {
+		var tagSet = []; // Start with empty array
+
+		// Add "key=value" to the array for each tag in tags
+		Object.keys(tags).forEach( function(key) {
+			tagSet.push(key + "=" + tags[key])
+		})
+
+		// Turn into a comma-separated string
+		var tagString = "";
+		if ( tagSet.length > 0 ) {
+			tagString = "%7B" + tagSet.join(",") + "%7D";
+		}
+
+		// Build the final uri
 		var uri = "http://127.0.0.1:4242/api/query?start=" + startTime
-				+ "&end=" + endTime + "&m=sum:rate:" + metric + "%7Bhost=*,type=*%7D";
+				+ "&end=" + endTime + "&m=sum:rate:" + metric + tagString;
 		return uri;
 	}
 	
@@ -55,7 +69,8 @@ $(function() {
 		var metric    = connectionData["metric"];
 		var startTime = connectionData["startTime"];
 		var endTime   = connectionData["endTime"];
-		var connectionUri = buildOpenTSDBUri(metric, startTime, endTime);
+		var tags  	  = connectionData["tags"];
+		var connectionUri = buildOpenTSDBUri(metric, startTime, endTime, tags);
 
 		console.log(connectionUri);
 		tableau.log(connectionUri);
@@ -137,10 +152,11 @@ $(document).ready(function() {
 		var metric = $('#metric').val().trim();
 		var startTime = $('#datetimepicker1').data('date');
 		var endTime = $('#datetimepicker2').data('date');
+		var tags = {};
 
 		if (metric) {
 			tableau.connectionName = "Data for metric: " + metric;
-			tableau.connectionData = JSON.stringify({'metric': metric, 'startTime': startTime, 'endTime': endTime});
+			tableau.connectionData = JSON.stringify({'metric': metric, 'startTime': startTime, 'endTime': endTime, 'tags': tags});
 			tableau.submit();
 		}
 	});
