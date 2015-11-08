@@ -1,3 +1,5 @@
+
+
 $(function() {
 	$('#datetimepicker1').datetimepicker({
 			format: 'YYYY/MM/DD-HH:mm:ss'
@@ -160,4 +162,11 @@ $(document).ready(function() {
 			tableau.submit();
 		}
 	});
+
+	$("#tagVal1").focus(function() {
+	    console.log('in');
+	}).blur(function() {
+	    console.log('out');
+	});
+
 });
