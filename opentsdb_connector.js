@@ -98,14 +98,15 @@ function buildEtagsUri(metric, startTime, endTime, tags) {
 		var startTime = connectionData["startTime"];
 		var endTime   = connectionData["endTime"];
 		var tags  	  = connectionData["tags"];
-		var connectionUri = buildOpenTSDBUri(metric, startTime, endTime, tags);
-
-		console.log(connectionUri);
-		tableau.log(connectionUri);
+		var metricUri = buildOpenTSDBUri(metric, startTime, endTime, tags);
+		var etagsUri  = metricUri + "&json";
+		
+		console.log(metricUri);
+		tableau.log(metricUri);
 
 		var xhr = $
 				.ajax({
-					url : connectionUri,
+					url : metricUri,
 					dataType : 'json',
 					success : function(data) {
 						if (data != null) {
@@ -176,11 +177,67 @@ function buildEtagsUri(metric, startTime, endTime, tags) {
 })();
 
 $(document).ready(function() {
+	var startTime;
+	var endTime;
+	var tags;
+	var metric;
+	var metricUri;
+	var etagsUri;
+	
+	var tags = { 'host': '*' };
+	
+	function updatePage() {
+		console.log("updatePage() called");
+
+
+		metric = $('#metric').val().trim();
+		startTime = $('#datetimepicker1').data('date');
+		endTime = $('#datetimepicker2').data('date');
+		tags = {};
+		
+		metricUri = buildEtagsUri(metric, startTime, endTime, tags);
+		etagsUri  = metricUri + "&json";
+		console.log("etagsUri: " + etagsUri);
+//		jQuery.get(etagsUri, alert);
+		
+		var etags;
+		jQuery.getJSON(etagsUri, function(data) {
+				etags = data;
+				console.log("(Inside getJSON) data: ");
+				console.log(tags);
+				console.log(data);
+//				console.log(data['etags']);
+				console.log(data['etags'][0]);				
+				
+				data['etags'][0].forEach( function(tag) {
+					if (!(tag in tags)) {
+						tags[tag] = $('#tagVal1').val();
+					}
+				}
+				)
+
+				// Need to retrieve names/values of current tags, compare to what is returned from etags 
+				// and update if necessary: check current list of tag names, add names that are in etags but not already represented
+				
+				console.log(tags);
+//				$("#tags").replaceWith()
+
+//				console.log($.map( $(".tags"), function(el) { return $(el).$('#tagName').val()}).join(', '));
+				console.log($("div.tagName input").val());
+				
+				
+				
+		}
+		)
+		console.log("(After getJSON) etags: ");
+		console.log(etags);
+	}
+	
 	$("#submitButton").click(function() {
-		var metric = $('#metric').val().trim();
-		var startTime = $('#datetimepicker1').data('date');
-		var endTime = $('#datetimepicker2').data('date');
-		var tags = {};
+		metric = $('#metric').val().trim();
+		startTime = $('#datetimepicker1').data('date');
+		endTime = $('#datetimepicker2').data('date');
+		tags = {};
 
 		if (metric) {
 			tableau.connectionName = "Data for metric: " + metric;
@@ -193,6 +250,13 @@ $(document).ready(function() {
 	    console.log('in');
 	}).blur(function() {
 	    console.log('out');
+	    updatePage();
 	});
-
+	
+	// Q. How do I register events for all the elements in a class? I want to update tags, etc. when ever any of the input parameters changes
+	$(".tagVal").focus(function() {
+	    console.log('in');
+	}).blur(function() {
+	    console.log('out');
+	});
 });
