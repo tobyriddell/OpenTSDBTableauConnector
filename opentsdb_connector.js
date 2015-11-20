@@ -12,27 +12,53 @@ $(function() {
 	});
 });
 
+function buildOpenTSDBUri(metric, startTime, endTime, tags) {
+	var tagSet = []; // Start with empty array
+
+	// Add "key=value" to the array for each tag in tags
+	Object.keys(tags).forEach( function(key) {
+		tagSet.push(key + "=" + tags[key])
+	})
+
+	// Turn into a comma-separated string
+	var tagString = "";
+	if ( tagSet.length > 0 ) {
+		tagString = "%7B" + tagSet.join(",") + "%7D";
+	}
+
+	// Build the final uri
+	var uri = "http://127.0.0.1:4242/api/query?start=" + startTime
+			+ "&end=" + endTime + "&m=sum:rate:" + metric + tagString;
+	return uri;
+}
+
+function buildEtagsUri(metric, startTime, endTime, tags) {
+	var tagSet = []; // Start with empty array
+
+	// Add "key=value" to the array for each tag in tags
+	Object.keys(tags).forEach( function(key) {
+		tagSet.push(key + "=" + tags[key])
+	})
+
+	// Turn into a comma-separated string
+	var tagString = "";
+	if ( tagSet.length > 0 ) {
+		tagString = "%7B" + tagSet.join(",") + "%7D";
+	}
+
+	// Build the final uri
+	var uri = "http://127.0.0.1:4242/q?start=" + startTime
+			+ "&end=" + endTime + "&m=sum:rate:" + metric + tagString;
+	return uri;
+}
+
 (function() {
 	// TODO: Need to add more parameters here - e.g. tags (and their values), rate (true/false)	
-	function buildOpenTSDBUri(metric, startTime, endTime, tags) {
-		var tagSet = []; // Start with empty array
 
-		// Add "key=value" to the array for each tag in tags
-		Object.keys(tags).forEach( function(key) {
-			tagSet.push(key + "=" + tags[key])
-		})
-
-		// Turn into a comma-separated string
-		var tagString = "";
-		if ( tagSet.length > 0 ) {
-			tagString = "%7B" + tagSet.join(",") + "%7D";
-		}
-
-		// Build the final uri
-		var uri = "http://127.0.0.1:4242/api/query?start=" + startTime
-				+ "&end=" + endTime + "&m=sum:rate:" + metric + tagString;
-		return uri;
-	}
+	
+	// http://127.0.0.1:4242/api/query?start=2015/10/28-05:48:10&end=2015/10/28-06:18:06&m=sum:rate:proc.net.tcp%7Bhost=*%7D&o=&yrange=%5B0:%5D&wxh=800x200&json
+	// http://127.0.0.1:4242/api/query?start=2015/10/28-05:45:00&end=2015/10/28-06:15:00&m=sum:rate:proc.stat.cpu
+	
 	
 	// Credit to Pointy
 	// (http://stackoverflow.com/questions/10073699/pad-a-number-with-leading-zeros-in-javascript)
