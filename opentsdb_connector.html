@@ -19,7 +19,7 @@
 		Start:
 	</p>
 	<div class='input-group date' id='datetimepicker1'>
-		<input type='text' class="form-control start_time" name="start_time" value="2015/10/28-05:45:00"/>
+		<input type='text' class="form-control start_time" name="start_time" value="2015/10/29-06:58:09"/>
 		<span class="input-group-addon">
 			<span class="glyphicon glyphicon-calendar"></span>
 		</span>
@@ -28,7 +28,7 @@
 		End:
 	</p>
 	<div class='input-group date' id='datetimepicker2'>
-		<input type='text' class="form-control end_time" name="end_time" value="2015/10/28-06:15:00"/>
+		<input type='text' class="form-control end_time" name="end_time" value="2015/10/29-07:12:28"/>
 		<span class="input-group-addon">
 			<span class="glyphicon glyphicon-calendar"></span>
 		</span>
@@ -36,12 +36,12 @@
 	<p>
 		Enter the name of the metric: <input type="text" id="metric" value="proc.stat.cpu"/>
 	</p>
-	<div id="tags">
+	<div id="tags" class="tags">
 		<p>
 			Tags:
 		</p>
-		<input type="text" id="tagName1"/>
-		<input type="text" id="tagVal1"/>
+		<div class="tagName"><input class="tagInput" type="text" id="tagName1" value="host"/></div>
+		<div class="tagVal"><input class="tagInput" type="text" id="tagVal1" value="*"/></div>
 	</div>
 	<p>
 		<button type="button" id="submitButton">Get the data</button>
