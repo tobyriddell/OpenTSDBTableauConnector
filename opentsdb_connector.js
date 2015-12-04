@@ -1,5 +1,3 @@
-
-
 $(function() {
 	$('#datetimepicker1').datetimepicker({
 			format: 'YYYY/MM/DD-HH:mm:ss'
@@ -55,10 +53,8 @@ function buildEtagsUri(metric, startTime, endTime, tags) {
 (function() {
 	// TODO: Need to add more parameters here - e.g. tags (and their values), rate (true/false)	
 
-	
 	// http://127.0.0.1:4242/api/query?start=2015/10/28-05:48:10&end=2015/10/28-06:18:06&m=sum:rate:proc.net.tcp%7Bhost=*%7D&o=&yrange=%5B0:%5D&wxh=800x200&json
 	// http://127.0.0.1:4242/api/query?start=2015/10/28-05:45:00&end=2015/10/28-06:15:00&m=sum:rate:proc.stat.cpu
-	
 	
 	// Credit to Pointy
 	// (http://stackoverflow.com/questions/10073699/pad-a-number-with-leading-zeros-in-javascript)
@@ -104,8 +100,7 @@ function buildEtagsUri(metric, startTime, endTime, tags) {
 		console.log(metricUri);
 		tableau.log(metricUri);
 
-		var xhr = $
-				.ajax({
+		var xhr = $.ajax({
 					url : metricUri,
 					dataType : 'json',
 					success : function(data) {
@@ -153,10 +148,8 @@ function buildEtagsUri(metric, startTime, endTime, tags) {
 					},
 					error : function(xhr, ajaxOptions, thrownError) {
 						// If the connection fails, log the error and return an empty set
-						tableau.log("Connection error: " + xhr.responseText
-								+ "\n" + thrownError);
-						tableau
-								.abortWithError("Error while trying to connect to OpenTSDB.");
+						tableau.log("Connection error: " + xhr.responseText + "\n" + thrownError);
+						tableau.abortWithError("Error while trying to connect to OpenTSDB.");
 					}
 				});
 	};
@@ -176,6 +169,7 @@ function buildEtagsUri(metric, startTime, endTime, tags) {
 
 })();
 
+
 $(document).ready(function() {
 	var startTime;
 	var endTime;
@@ -183,12 +177,34 @@ $(document).ready(function() {
 	var metric;
 	var metricUri;
 	var etagsUri;
+		
+	// Initial set of tags
+	var tags = { 'host': '*', 'foo' : 'bar'};
+
+	var tagsHtml = '<div id="tags"><p>Tags:</p><div class="tagName">';
+	var counter = 1;
+	Object.keys(tags).sort().forEach(function(t) {
+			console.log("Processing tag - name " + t);
+			console.log("Processing tag - value " + tags[t]);
+			tagsHtml += '<div class="tagLine"><input class="tagInput" type="text" id="tagName' + counter + '" value="' + t + '"/>';
+			tagsHtml += '<input class="tagInput" type="text" id="tagVal' + counter + '" value="' + tags[t] + '"/></div>';
+			counter += 1;
+		}
+	);
+	tagsHtml += '</div>';
 	
-	var tags = { 'host': '*' };
+	console.log("tagsHtml: ");
+	console.log(tagsHtml);
+
+//	$('#tags').replaceWith('<div id="tags"><p>Tags:</p><div class="tagName">' +
+//			'<input class="tagInput" type="text" id="tagName1" value="host"/></div>' +
+//			'<div class="tagVal"><input class="tagInput" type="text" id="tagVal1" value="*"/></div>');
+//	                        
+	
+	$('#tags').replaceWith(tagsHtml);	
 	
 	function updatePage() {
 		console.log("updatePage() called");
-
 
 		metric = $('#metric').val().trim();
 		startTime = $('#datetimepicker1').data('date');
@@ -225,8 +241,6 @@ $(document).ready(function() {
 //				console.log($.map( $(".tags"), function(el) { return $(el).$('#tagName').val()}).join(', '));
 				console.log($("div.tagName input").val());
 				
-				
-				
 		}
 		)
 		console.log("(After getJSON) etags: ");
@@ -252,11 +266,19 @@ $(document).ready(function() {
 	    console.log('out');
 	    updatePage();
 	});
-	
-	// Q. How do I register events for all the elements in a class? I want to update tags, etc. when ever any of the input parameters changes
-	$(".tagVal").focus(function() {
+
+	// Register callback when focus enters or exits one of the input fields (name or value)
+	$(".tagInput").focus(function() {
 	    console.log('in');
 	}).blur(function() {
 	    console.log('out');
+	    updatePage();
 	});
+
+//	// Q. How do I register events for all the elements in a class? I want to update tags, etc. when ever any of the input parameters changes
+//	$(".tagVal").focus(function() {
+//	    console.log('in');
+//	}).blur(function() {
+//	    console.log('out');
+//	});
 });
