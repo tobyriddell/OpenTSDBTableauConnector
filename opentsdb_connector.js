@@ -31,23 +31,28 @@ function buildOpenTSDBUri(metric, startTime, endTime, tags) {
 }
 
 function buildEtagsUri(metric, startTime, endTime, tags) {
-	var tagSet = []; // Start with empty array
-
-	// Add "key=value" to the array for each tag in tags
-	Object.keys(tags).forEach( function(key) {
-		tagSet.push(key + "=" + tags[key])
-	})
-
-	// Turn into a comma-separated string
-	var tagString = "";
-	if ( tagSet.length > 0 ) {
-		tagString = "%7B" + tagSet.join(",") + "%7D";
-	}
-
 	// Build the final uri
-	var uri = "http://127.0.0.1:4242/q?start=" + startTime
-			+ "&end=" + endTime + "&m=sum:rate:" + metric + tagString;
-	return uri;
+	var etagsUri = "http://127.0.0.1:4242/q?start=" + startTime
+			+ "&end=" + endTime + "&m=sum:rate:" + metric + "&json";
+	return etagsUri;
+}
+
+function buildTagsHtml(tags) {
+	var tagsHtml = '<div id="tags"><p>Tags:</p><div class="tags">';
+	var counter = 1;
+	console.log("In buildTagsHtml, tags is: ");
+	console.log(tags);
+	Object.keys(tags).sort().forEach(function(t) {
+			console.log("Processing tag - name " + t);
+			tagsHtml += '<div class="tagLine"><input class="tagName" type="text" id="tagName' + counter + '" value="' + t + '"/>';
+			console.log("Processing tag - value " + tags[t]);
+			tagsHtml += '<input class="tagVal" type="text" id="tagVal' + counter + '" value="' + tags[t] + '"/></div>';
+			counter += 1;
+		}
+	);
+	tagsHtml += '</div>';
+//	console.log("tagsHtml: " + tagsHtml);
+	return tagsHtml;
 }
 
 (function() {
@@ -169,90 +174,110 @@ function buildEtagsUri(metric, startTime, endTime, tags) {
 
 })();
 
-
 $(document).ready(function() {
 	var startTime;
 	var endTime;
 	var tags;
 	var metric;
-	var metricUri;
-	var etagsUri;
 		
-	// Initial set of tags
-	var tags = { 'host': '*', 'foo' : 'bar'};
+	// Define initial set of tags and insert into HTML
+	var tags = { 'host': '*' };
+	$('#tags').replaceWith(buildTagsHtml(tags));
+	
+	console.log("$(document).ready(...) called");
+	
+	function getTagsFromHtml() {
+		// Gather current tag names/values from HTML (capture any fields modified by user)
+		var counter = 1;
+		var tags = {};
+		$(".tagName").map( function(tag) {
+				console.log("Tag name is: " + $("#tagName" + counter).val());
+				console.log("Tag value is: " + $("#tagVal" + counter).val());
+				tags[$("#tagName" + counter).val()] = $("#tagVal" + counter).val();
+				counter += 1;
+			}
+		)
+		return tags;
+	}
+	
+	function registerCallbacks() {
+		$("#tagVal1").focus(function() {
+		    console.log('in');
+		}).blur(function() {
+		    console.log('out');
+		    updatePage(tags);
+		});
 
-	var tagsHtml = '<div id="tags"><p>Tags:</p><div class="tagName">';
-	var counter = 1;
-	Object.keys(tags).sort().forEach(function(t) {
-			console.log("Processing tag - name " + t);
-			console.log("Processing tag - value " + tags[t]);
-			tagsHtml += '<div class="tagLine"><input class="tagInput" type="text" id="tagName' + counter + '" value="' + t + '"/>';
-			tagsHtml += '<input class="tagInput" type="text" id="tagVal' + counter + '" value="' + tags[t] + '"/></div>';
-			counter += 1;
-		}
-	);
-	tagsHtml += '</div>';
+		// Register callback for when focus enters or exits one of the input fields (name or value), call updatePage() the focus exits
+		$("input.tagVal").focus(function() {
+		    console.log('in');
+		}).blur(function() {
+		    console.log('out');
+		    updatePage(tags);
+		});
+	}
 	
-	console.log("tagsHtml: ");
-	console.log(tagsHtml);
-
-//	$('#tags').replaceWith('<div id="tags"><p>Tags:</p><div class="tagName">' +
-//			'<input class="tagInput" type="text" id="tagName1" value="host"/></div>' +
-//			'<div class="tagVal"><input class="tagInput" type="text" id="tagVal1" value="*"/></div>');
-//	                        
-	
-	$('#tags').replaceWith(tagsHtml);	
-	
-	function updatePage() {
+	function updatePage(tags) {
+		var etagsUri;
 		console.log("updatePage() called");
-
+		
 		metric = $('#metric').val().trim();
 		startTime = $('#datetimepicker1').data('date');
 		endTime = $('#datetimepicker2').data('date');
-		tags = {};
 		
-		metricUri = buildEtagsUri(metric, startTime, endTime, tags);
-		etagsUri  = metricUri + "&json";
-		console.log("etagsUri: " + etagsUri);
-//		jQuery.get(etagsUri, alert);
+		etagsUri = buildEtagsUri(metric, startTime, endTime, tags);
+//		console.log("etagsUri: " + etagsUri);
 		
-		var etags;
+		// Gather current tag names/values from HTML (capture any fields modified by user)
+//		var counter = 1;
+//		var gatheredTags = {};
+//		$(".tagName").map( function(tag) {
+//				console.log("Tag name is: " + $("#tagName" + counter).val());
+//				console.log("Tag value is: " + $("#tagVal" + counter).val());
+//				gatheredTags[$("#tagName" + counter).val()] = $("#tagVal" + counter).val();
+//				counter += 1;
+//			}
+//		)
+		
+//		console.log("gatheredTags: ");
+//		console.log(gatheredTags);
+		
+//		tags = gatheredTags;
+	
+		tags = getTagsFromHtml();
+		
 		jQuery.getJSON(etagsUri, function(data) {
-				etags = data;
 				console.log("(Inside getJSON) data: ");
 				console.log(tags);
-				console.log(data);
-//				console.log(data['etags']);
-				console.log(data['etags'][0]);				
+				console.log(data['etags'][0]);
 				
-				data['etags'][0].forEach( function(tag) {
-					if (!(tag in tags)) {
-						tags[tag] = $('#tagVal1').val();
+				// Compare current tag names to what is returned from etags, add missing tag names (with tag value 
+				// initially set to empty)
+				data['etags'][0].forEach( function(tagName) {
+						if ( ! (tagName in tags) ) {
+							tags[tagName] = '';
+//							console.log("Added '" + tagName + "' to tags");
+						}
 					}
-				}
 				)
-
-				// Need to retrieve names/values of current tags, compare to what is returned from etags 
-				// and update if necessary: check current list of tag names, add names that are in etags but not already represented
-				
-				console.log(tags);
-//				$("#tags").replaceWith()
-
-//				console.log($.map( $(".tags"), function(el) { return $(el).$('#tagName').val()}).join(', '));
-				console.log($("div.tagName input").val());
-				
-		}
+//				console.log("After query:")
+//				console.log(tags);
+				$('#tags').replaceWith(buildTagsHtml(tags));
+				registerCallbacks();
+			}
 		)
-		console.log("(After getJSON) etags: ");
-		console.log(etags);
 	}
 	
 	$("#submitButton").click(function() {
 		metric = $('#metric').val().trim();
 		startTime = $('#datetimepicker1').data('date');
 		endTime = $('#datetimepicker2').data('date');
-		tags = {};
+//		tags = {};
 
+		tags = getTagsFromHtml();
+		console.log("After submit, tags: ");
+		console.log(tags);
+		
 		if (metric) {
 			tableau.connectionName = "Data for metric: " + metric;
 			tableau.connectionData = JSON.stringify({'metric': metric, 'startTime': startTime, 'endTime': endTime, 'tags': tags});
@@ -260,25 +285,7 @@ $(document).ready(function() {
 		}
 	});
 
-	$("#tagVal1").focus(function() {
-	    console.log('in');
-	}).blur(function() {
-	    console.log('out');
-	    updatePage();
-	});
-
-	// Register callback when focus enters or exits one of the input fields (name or value)
-	$(".tagInput").focus(function() {
-	    console.log('in');
-	}).blur(function() {
-	    console.log('out');
-	    updatePage();
-	});
-
-//	// Q. How do I register events for all the elements in a class? I want to update tags, etc. when ever any of the input parameters changes
-//	$(".tagVal").focus(function() {
-//	    console.log('in');
-//	}).blur(function() {
-//	    console.log('out');
-//	});
+	// call 'updatePage()' when page has loaded to get etags
+	updatePage(tags);
+	registerCallbacks();
 });
