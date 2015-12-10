@@ -10,7 +10,7 @@ $(function() {
 	});
 });
 
-function buildOpenTSDBUri(metric, startTime, endTime, tags) {
+function buildOpenTSDBUri(server, port, metric, startTime, endTime, tags) {
 	var tagSet = []; // Start with empty array
 
 	// Add "key=value" to the array for each tag in tags
@@ -25,14 +25,14 @@ function buildOpenTSDBUri(metric, startTime, endTime, tags) {
 	}
 
 	// Build the final uri
-	var uri = "http://127.0.0.1:4242/api/query?start=" + startTime
+	var uri = "http://" + server + ":" + port + "/api/query?start=" + startTime
 			+ "&end=" + endTime + "&m=sum:rate:" + metric + tagString;
 	return uri;
 }
 
-function buildEtagsUri(metric, startTime, endTime, tags) {
+function buildEtagsUri(server, port, metric, startTime, endTime) {
 	// Build the final uri
-	var etagsUri = "http://127.0.0.1:4242/q?start=" + startTime
+	var etagsUri = "http://" + server + ":" + port + "/q?start=" + startTime
 			+ "&end=" + endTime + "&m=sum:rate:" + metric + "&json";
 	return etagsUri;
 }
@@ -55,38 +55,45 @@ function buildTagsHtml(tags) {
 	return tagsHtml;
 }
 
+//// Credit to Pointy
+//// (http://stackoverflow.com/questions/10073699/pad-a-number-with-leading-zeros-in-javascript)
+//function pad(n, width, z) {
+//	z = z || '0';
+//	n = n + '';
+//	return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+//}
+//
+//function pad(n) {
+//	if (n < 10) {
+//		return "0" + n;
+//	} else {
+//		return "" + n;
+//	}
+//}
+
+//// Credit to shomrat
+//// (http://stackoverflow.com/questions/847185/convert-a-unix-timestamp-to-time-in-javascript)
+//function timeConverter(UNIX_timestamp) {
+//	var a = new Date(UNIX_timestamp * 1000);
+//	var months = [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
+//			'Sep', 'Oct', 'Nov', 'Dec' ];
+//	var year = a.getFullYear();
+//	var month = months[a.getMonth()];
+//	var date = a.getDate();
+//	var hour = a.getHours();
+//	var min = a.getMinutes();
+//	var sec = a.getSeconds();
+//	var timeStr = year + '-' + pad(month, 2) + '-' + pad(date, 2) + ' '
+//			+ pad(hour, 2) + ':' + pad(min, 2) + ':' + pad(sec, 2);
+//
+//	return timeStr;
+//}
+
 (function() {
 	// TODO: Need to add more parameters here - e.g. tags (and their values), rate (true/false)	
 
 	// http://127.0.0.1:4242/api/query?start=2015/10/28-05:48:10&end=2015/10/28-06:18:06&m=sum:rate:proc.net.tcp%7Bhost=*%7D&o=&yrange=%5B0:%5D&wxh=800x200&json
 	// http://127.0.0.1:4242/api/query?start=2015/10/28-05:45:00&end=2015/10/28-06:15:00&m=sum:rate:proc.stat.cpu
-	
-	// Credit to Pointy
-	// (http://stackoverflow.com/questions/10073699/pad-a-number-with-leading-zeros-in-javascript)
-	function pad(n, width, z) {
-		z = z || '0';
-		n = n + '';
-		return n.length >= width ? n : new Array(width - n.length + 1).join(z)
-				+ n;
-	}
-
-	// Credit to shomrat
-	// (http://stackoverflow.com/questions/847185/convert-a-unix-timestamp-to-time-in-javascript)
-	function timeConverter(UNIX_timestamp) {
-		var a = new Date(UNIX_timestamp * 1000);
-		var months = [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
-				'Sep', 'Oct', 'Nov', 'Dec' ];
-		var year = a.getFullYear();
-		var month = months[a.getMonth()];
-		var date = a.getDate();
-		var hour = a.getHours();
-		var min = a.getMinutes();
-		var sec = a.getSeconds();
-		var timeStr = year + '-' + pad(month, 2) + '-' + pad(date, 2) + ' '
-				+ pad(hour, 2) + ':' + pad(min, 2) + ':' + pad(sec, 2);
-
-		return timeStr;
-	}
 
 	var myConnector = tableau.makeConnector();
 
@@ -99,8 +106,10 @@ function buildTagsHtml(tags) {
 		var startTime = connectionData["startTime"];
 		var endTime   = connectionData["endTime"];
 		var tags  	  = connectionData["tags"];
-		var metricUri = buildOpenTSDBUri(metric, startTime, endTime, tags);
-		var etagsUri  = metricUri + "&json";
+		var server    = connectionData["server"];
+		var port      = connectionData["port"];
+		var metricUri = buildOpenTSDBUri(server, port, metric, startTime, endTime, tags);
+		var etagsUri  = buildEtagsUri(server, port, metric, startTime, endTime);
 		
 		console.log(metricUri);
 		tableau.log(metricUri);
@@ -225,7 +234,7 @@ $(document).ready(function() {
 		startTime = $('#datetimepicker1').data('date');
 		endTime = $('#datetimepicker2').data('date');
 		
-		etagsUri = buildEtagsUri(metric, startTime, endTime, tags);
+		etagsUri = buildEtagsUri("127.0.0.1", "4242", metric, startTime, endTime);
 //		console.log("etagsUri: " + etagsUri);
 		
 		// Gather current tag names/values from HTML (capture any fields modified by user)
@@ -272,20 +281,22 @@ $(document).ready(function() {
 		metric = $('#metric').val().trim();
 		startTime = $('#datetimepicker1').data('date');
 		endTime = $('#datetimepicker2').data('date');
-//		tags = {};
-
+		server = "127.0.0.1";
+		port = "4242";
 		tags = getTagsFromHtml();
+
 		console.log("After submit, tags: ");
 		console.log(tags);
 		
 		if (metric) {
 			tableau.connectionName = "Data for metric: " + metric;
-			tableau.connectionData = JSON.stringify({'metric': metric, 'startTime': startTime, 'endTime': endTime, 'tags': tags});
+			tableau.connectionData = JSON.stringify({'server': server, 'port': port, 'metric': metric, 
+				'startTime': startTime, 'endTime': endTime, 'tags': tags});
 			tableau.submit();
 		}
 	});
 
-	// call 'updatePage()' when page has loaded to get etags
+	// call 'updatePage()' when page has loaded to update tags
 	updatePage(tags);
 	registerCallbacks();
 });
