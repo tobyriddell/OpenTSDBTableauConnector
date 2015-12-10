@@ -40,8 +40,8 @@ function buildEtagsUri(server, port, metric, startTime, endTime) {
 function buildTagsHtml(tags) {
 	var tagsHtml = '<div id="tags"><p>Tags:</p><div class="tags">';
 	var counter = 1;
-	console.log("In buildTagsHtml, tags is: ");
-	console.log(tags);
+//	console.log("In buildTagsHtml, tags is: ");
+//	console.log(tags);
 	Object.keys(tags).sort().forEach(function(t) {
 			console.log("Processing tag - name " + t);
 			tagsHtml += '<div class="tagLine"><input class="tagName" type="text" id="tagName' + counter + '" value="' + t + '"/>';
@@ -54,40 +54,6 @@ function buildTagsHtml(tags) {
 //	console.log("tagsHtml: " + tagsHtml);
 	return tagsHtml;
 }
-
-//// Credit to Pointy
-//// (http://stackoverflow.com/questions/10073699/pad-a-number-with-leading-zeros-in-javascript)
-//function pad(n, width, z) {
-//	z = z || '0';
-//	n = n + '';
-//	return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
-//}
-//
-//function pad(n) {
-//	if (n < 10) {
-//		return "0" + n;
-//	} else {
-//		return "" + n;
-//	}
-//}
-
-//// Credit to shomrat
-//// (http://stackoverflow.com/questions/847185/convert-a-unix-timestamp-to-time-in-javascript)
-//function timeConverter(UNIX_timestamp) {
-//	var a = new Date(UNIX_timestamp * 1000);
-//	var months = [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
-//			'Sep', 'Oct', 'Nov', 'Dec' ];
-//	var year = a.getFullYear();
-//	var month = months[a.getMonth()];
-//	var date = a.getDate();
-//	var hour = a.getHours();
-//	var min = a.getMinutes();
-//	var sec = a.getSeconds();
-//	var timeStr = year + '-' + pad(month, 2) + '-' + pad(date, 2) + ' '
-//			+ pad(hour, 2) + ':' + pad(min, 2) + ':' + pad(sec, 2);
-//
-//	return timeStr;
-//}
 
 (function() {
 	// TODO: Need to add more parameters here - e.g. tags (and their values), rate (true/false)	
@@ -231,29 +197,19 @@ $(document).ready(function() {
 		console.log("updatePage() called");
 		
 		metric = $('#metric').val().trim();
+		console.log("Metric is " + metric);
 		startTime = $('#datetimepicker1').data('date');
 		endTime = $('#datetimepicker2').data('date');
 		
 		etagsUri = buildEtagsUri("127.0.0.1", "4242", metric, startTime, endTime);
 //		console.log("etagsUri: " + etagsUri);
-		
-		// Gather current tag names/values from HTML (capture any fields modified by user)
-//		var counter = 1;
-//		var gatheredTags = {};
-//		$(".tagName").map( function(tag) {
-//				console.log("Tag name is: " + $("#tagName" + counter).val());
-//				console.log("Tag value is: " + $("#tagVal" + counter).val());
-//				gatheredTags[$("#tagName" + counter).val()] = $("#tagVal" + counter).val();
-//				counter += 1;
-//			}
-//		)
-		
-//		console.log("gatheredTags: ");
-//		console.log(gatheredTags);
-		
-//		tags = gatheredTags;
-	
+
 		tags = getTagsFromHtml();
+		
+		// Ensure there's a blank tag name/value pair in tags
+		if ( ! $.inArray(' ', tags) > -1 ) {
+			tags[''] = '';
+		}
 		
 		jQuery.getJSON(etagsUri, function(data) {
 				console.log("(Inside getJSON) data: ");
@@ -262,10 +218,12 @@ $(document).ready(function() {
 				
 				// Compare current tag names to what is returned from etags, add missing tag names (with tag value 
 				// initially set to empty)
+				console.log("Retrieved tags:");
+				console.log(data['etags'][0]);
 				data['etags'][0].forEach( function(tagName) {
 						if ( ! (tagName in tags) ) {
 							tags[tagName] = '';
-//							console.log("Added '" + tagName + "' to tags");
+							console.log("Added '" + tagName + "' to tags");
 						}
 					}
 				)
@@ -283,7 +241,15 @@ $(document).ready(function() {
 		endTime = $('#datetimepicker2').data('date');
 		server = "127.0.0.1";
 		port = "4242";
-		tags = getTagsFromHtml();
+		var tags = getTagsFromHtml();
+		
+		// Remove any tags with blank names and/or values
+		delete tags[''];
+		for (var name in tags) {
+			if (tags[name] == '') {
+				delete tags[name];
+			}
+		}
 
 		console.log("After submit, tags: ");
 		console.log(tags);
