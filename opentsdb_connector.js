@@ -239,8 +239,8 @@ $(document).ready(function() {
 		metric = $('#metric').val().trim();
 		startTime = $('#datetimepicker1').data('date');
 		endTime = $('#datetimepicker2').data('date');
-		server = "127.0.0.1";
-		port = "4242";
+		server = $('#server').val().trim();
+		port = $('#port').val().trim();
 		var tags = getTagsFromHtml();
 		
 		// Remove any tags with blank names and/or values
