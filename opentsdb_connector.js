@@ -1,11 +1,11 @@
 $(function() {
-	$('#datetimepicker1').datetimepicker({
+	$('#start_datetime').datetimepicker({
 			format: 'YYYY/MM/DD-HH:mm:ss'
 		});
 });
 
 $(function() {
-	$('#datetimepicker2').datetimepicker({
+	$('#end_datetime').datetimepicker({
 		format: 'YYYY/MM/DD-HH:mm:ss'
 	});
 });
@@ -198,8 +198,8 @@ $(document).ready(function() {
 		
 		metric = $('#metric').val().trim();
 		console.log("Metric is " + metric);
-		startTime = $('#datetimepicker1').data('date');
-		endTime = $('#datetimepicker2').data('date');
+		startTime = $('#start_datetime').data('date');
+		endTime = $('#end_datetime').data('date');
 		
 		etagsUri = buildEtagsUri("127.0.0.1", "4242", metric, startTime, endTime);
 //		console.log("etagsUri: " + etagsUri);
@@ -237,8 +237,8 @@ $(document).ready(function() {
 	
 	$("#submitButton").click(function() {
 		metric = $('#metric').val().trim();
-		startTime = $('#datetimepicker1').data('date');
-		endTime = $('#datetimepicker2').data('date');
+		startTime = $('#start_datetime').data('date');
+		endTime = $('#end_datetime').data('date');
 		server = $('#server').val().trim();
 		port = $('#port').val().trim();
 		var tags = getTagsFromHtml();
