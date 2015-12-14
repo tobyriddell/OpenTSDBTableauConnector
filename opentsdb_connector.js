@@ -39,17 +39,11 @@ function buildEtagsUri(server, port, metric, startTime, endTime) {
 
 function buildTagsHtml(tags) {
 	var tagsHtml = '<div id="tags"><p>Tags:</p><div class="tags">';
-	var counter = 0;
-//	console.log("In buildTagsHtml, tags is: ");
-//	console.log(tags);
-	Object.keys(tags).sort().forEach(function(t) {
+	Object.keys(tags).sort().forEach(function(t, i) {
 		// Process tag name
-//		console.log("Processing tag - name " + t);
-		tagsHtml += '<div class="tagLine"><input class="tagName" type="text" id="tagName' + counter + '" value="' + t + '"/>';
-//		console.log("Processing tag - value " + tags[t]);
+		tagsHtml += '<div class="tagLine"><input class="tagName" type="text" id="tagName' + i + '" value="' + t + '"/>';
 		// Process tag value
-		tagsHtml += '<input class="tagVal" type="text" id="tagVal' + counter + '" value="' + tags[t] + '"/></div>';
-		counter += 1;
+		tagsHtml += '<input class="tagVal" type="text" id="tagVal' + i + '" value="' + tags[t] + '"/></div>';
 	});
 	tagsHtml += '</div>';
 //	console.log("tagsHtml: " + tagsHtml);
