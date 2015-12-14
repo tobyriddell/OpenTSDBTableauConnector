@@ -38,15 +38,13 @@ function buildEtagsUri(server, port, metric, startTime, endTime) {
 }
 
 function buildTagsHtml(tags) {
-	var tagsHtml = '<div id="tags"><p>Tags:</p><div class="tags">';
-	Object.keys(tags).sort().forEach(function(t, i) {
-		// Process tag name
-		tagsHtml += '<div class="tagLine"><input class="tagName" type="text" id="tagName' + i + '" value="' + t + '"/>';
-		// Process tag value
-		tagsHtml += '<input class="tagVal" type="text" id="tagVal' + i + '" value="' + tags[t] + '"/></div>';
-	});
-	tagsHtml += '</div>';
-//	console.log("tagsHtml: " + tagsHtml);
+	// Build HTML from preamble, tags and postamble
+	var tagsHtml = '<div id="tags"><p>Tags:</p><div class="tags">' +
+		Object.keys(tags).sort().map( function(t, i) {
+		return '<div class="tagLine"><input class="tagName" type="text" id="tagName' + i + '" value="' + t + '"/>' +
+			'<input class="tagVal" type="text" id="tagVal' + i + '" value="' + tags[t] + '"/></div>';
+	}).join('') + '</div>';
+	console.log('tagsHtml: ' + tagsHtml);
 	return tagsHtml;
 }
 
