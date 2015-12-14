@@ -41,8 +41,10 @@ function buildTagsHtml(tags) {
 	// Build HTML from preamble, tags and postamble
 	var tagsHtml = '<div id="tags"><p>Tags:</p><div class="tags">' +
 		Object.keys(tags).sort().map( function(t, i) {
-		return '<div class="tagLine"><input class="tagName" type="text" id="tagName' + i + '" value="' + t + '"/>' +
-			'<input class="tagVal" type="text" id="tagVal' + i + '" value="' + tags[t] + '"/></div>';
+		return '<div class="tagLine">' + 
+			'<input class="tagName" type="text" id="tagName' + i + '" value="' + t + '"/>' +
+			'<input class="tagVal" type="text" id="tagVal' + i + '" value="' + tags[t] + '"/>' + 
+			'</div>';
 	}).join('') + '</div>';
 	console.log('tagsHtml: ' + tagsHtml);
 	return tagsHtml;
@@ -55,6 +57,8 @@ function buildTagsHtml(tags) {
 	// http://127.0.0.1:4242/api/query?start=2015/10/28-05:45:00&end=2015/10/28-06:15:00&m=sum:rate:proc.stat.cpu
 
 	var myConnector = tableau.makeConnector();
+	
+//	var tags = {};
 
 	myConnector.getTableData = function(lastRecordToken) {
 		var dataToReturn = [];
@@ -66,6 +70,7 @@ function buildTagsHtml(tags) {
 		var startTime = connectionData["startTime"];
 		var endTime   = connectionData["endTime"];
 		var tags  	  = connectionData["tags"];
+//		tags  	      = connectionData["tags"];
 		var server    = connectionData["server"];
 		var port      = connectionData["port"];
 
@@ -88,12 +93,17 @@ function buildTagsHtml(tags) {
 
 								Object.keys(timeseries['dps']).forEach(function (key) {
 									console.log(key + ":" + timeseries['dps'][key]);
-									var entry = { 
+									// Initialise entry with static fields
+									var entry = {
 											'metric' : timeseries['metric'],
 											'timestamp': key,
 											'value' : timeseries['dps'][key],
-											'type' : timeseries['tags']['type']
 									}
+									// Add tags
+									Object.keys(tags).forEach( function(t) {
+										console.log("Adding tag " + t + " to datapoint");
+										entry[t] = timeseries['tags'][t];
+									});
 									dataToReturn.push(entry);
 								})
 							}
@@ -128,19 +138,25 @@ function buildTagsHtml(tags) {
 					}
 				});
 	};
-
 	
 	myConnector.getColumnHeaders = function() {
-		var fieldNames = ['metric', 'timestamp', 'value', 'type'];
-		var fieldTypes = ['string', 'datetime', 'float', 'string'];
+		var connectionData = JSON.parse(tableau.connectionData);
+		var tags  	       = connectionData["tags"];
+
+		var fieldNames     = ['metric', 'timestamp', 'value']; // Initialise fields with the fixed values
+		Object.keys(tags).forEach( function(t) { fieldNames.push(t); }); // Add tag names to fields
+
+		var fieldTypes = ['string', 'datetime', 'float']; // Initialise field types with fixed values
+		Object.keys(tags).forEach( function(t) { fieldTypes.push('string'); }); // Add tag types
+
 		tableau.headersCallback(fieldNames, fieldTypes);
 	}
 
 	tableau.registerConnector(myConnector);
-	//      myConnector.init = function() {
-	//        tableau.initCallback;
-	//        tableau.submit;
-	//    };
+	//myConnector.init = function() {
+	//	tableau.initCallback;
+	//	tableau.submit;
+	//};
 
 })();
 
