@@ -39,17 +39,18 @@ function buildEtagsUri(server, port, metric, startTime, endTime) {
 
 function buildTagsHtml(tags) {
 	var tagsHtml = '<div id="tags"><p>Tags:</p><div class="tags">';
-	var counter = 1;
+	var counter = 0;
 //	console.log("In buildTagsHtml, tags is: ");
 //	console.log(tags);
 	Object.keys(tags).sort().forEach(function(t) {
-			console.log("Processing tag - name " + t);
-			tagsHtml += '<div class="tagLine"><input class="tagName" type="text" id="tagName' + counter + '" value="' + t + '"/>';
-			console.log("Processing tag - value " + tags[t]);
-			tagsHtml += '<input class="tagVal" type="text" id="tagVal' + counter + '" value="' + tags[t] + '"/></div>';
-			counter += 1;
-		}
-	);
+		// Process tag name
+//		console.log("Processing tag - name " + t);
+		tagsHtml += '<div class="tagLine"><input class="tagName" type="text" id="tagName' + counter + '" value="' + t + '"/>';
+//		console.log("Processing tag - value " + tags[t]);
+		// Process tag value
+		tagsHtml += '<input class="tagVal" type="text" id="tagVal' + counter + '" value="' + tags[t] + '"/></div>';
+		counter += 1;
+	});
 	tagsHtml += '</div>';
 //	console.log("tagsHtml: " + tagsHtml);
 	return tagsHtml;
@@ -68,17 +69,19 @@ function buildTagsHtml(tags) {
 		var hasMoreData = false;
 
 		var connectionData = JSON.parse(tableau.connectionData);
+
 		var metric    = connectionData["metric"];
 		var startTime = connectionData["startTime"];
 		var endTime   = connectionData["endTime"];
 		var tags  	  = connectionData["tags"];
 		var server    = connectionData["server"];
 		var port      = connectionData["port"];
+
 		var metricUri = buildOpenTSDBUri(server, port, metric, startTime, endTime, tags);
 		var etagsUri  = buildEtagsUri(server, port, metric, startTime, endTime);
 		
-		console.log(metricUri);
-		tableau.log(metricUri);
+//		console.log(metricUri);
+//		tableau.log(metricUri);
 
 		var xhr = $.ajax({
 					url : metricUri,
@@ -163,20 +166,18 @@ $(document).ready(function() {
 	
 	function getTagsFromHtml() {
 		// Gather current tag names/values from HTML (capture any fields modified by user)
-		var counter = 1;
-		var tags = {};
-		$(".tagName").map( function(tag) {
-				console.log("Tag name is: " + $("#tagName" + counter).val());
-				console.log("Tag value is: " + $("#tagVal" + counter).val());
-				tags[$("#tagName" + counter).val()] = $("#tagVal" + counter).val();
-				counter += 1;
-			}
-		)
+		var tags = {};		
+		$(".tagName").map( function(i, el) {
+//			console.log("Tag name is: " + $("#tagName" + i).val());
+//			console.log("Tag value is: " + $("#tagVal" + i).val());
+			tags[$("#tagName" + i).val()] = $("#tagVal" + i).val();
+		})
+		
 		return tags;
 	}
 	
 	function registerCallbacks() {
-		$("#tagVal1").focus(function() {
+		$('#tagVal1').focus(function() {
 		    console.log('in');
 		}).blur(function() {
 		    console.log('out');
@@ -203,7 +204,6 @@ $(document).ready(function() {
 		
 		etagsUri = buildEtagsUri("127.0.0.1", "4242", metric, startTime, endTime);
 //		console.log("etagsUri: " + etagsUri);
-
 		tags = getTagsFromHtml();
 		
 		// Ensure there's a blank tag name/value pair in tags
@@ -212,18 +212,18 @@ $(document).ready(function() {
 		}
 		
 		jQuery.getJSON(etagsUri, function(data) {
-				console.log("(Inside getJSON) data: ");
-				console.log(tags);
-				console.log(data['etags'][0]);
+//				console.log("(Inside getJSON) data: ");
+//				console.log(tags);
+//				console.log(data['etags'][0]);
 				
 				// Compare current tag names to what is returned from etags, add missing tag names (with tag value 
 				// initially set to empty)
-				console.log("Retrieved tags:");
-				console.log(data['etags'][0]);
+//				console.log("Retrieved tags:");
+//				console.log(data['etags'][0]);
 				data['etags'][0].forEach( function(tagName) {
 						if ( ! (tagName in tags) ) {
 							tags[tagName] = '';
-							console.log("Added '" + tagName + "' to tags");
+//							console.log("Added '" + tagName + "' to tags");
 						}
 					}
 				)
