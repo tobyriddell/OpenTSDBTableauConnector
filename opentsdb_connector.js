@@ -1,13 +1,9 @@
 $(function() {
-	$('#start_datetime').datetimepicker({
-			format: 'YYYY/MM/DD-HH:mm:ss'
-		});
+	$('#start_datetime').datetimepicker({ format: 'YYYY/MM/DD-HH:mm:ss'	});
 });
 
 $(function() {
-	$('#end_datetime').datetimepicker({
-		format: 'YYYY/MM/DD-HH:mm:ss'
-	});
+	$('#end_datetime').datetimepicker({ format: 'YYYY/MM/DD-HH:mm:ss' });
 });
 
 function buildOpenTSDBUri(server, port, metric, startTime, endTime, tags) {
@@ -58,8 +54,6 @@ function buildTagsHtml(tags) {
 
 	var myConnector = tableau.makeConnector();
 	
-//	var tags = {};
-
 	myConnector.getTableData = function(lastRecordToken) {
 		var dataToReturn = [];
 		var hasMoreData = false;
@@ -70,7 +64,6 @@ function buildTagsHtml(tags) {
 		var startTime = connectionData["startTime"];
 		var endTime   = connectionData["endTime"];
 		var tags  	  = connectionData["tags"];
-//		tags  	      = connectionData["tags"];
 		var server    = connectionData["server"];
 		var port      = connectionData["port"];
 
@@ -81,62 +74,44 @@ function buildTagsHtml(tags) {
 //		tableau.log(metricUri);
 
 		var xhr = $.ajax({
-					url : metricUri,
-					dataType : 'json',
-					success : function(data) {
-						if (data != null) {
-							for (var int = 0; int < data.length; int++) {
-								var timeseries = data[int];
-								console.log("timeseries: ");
-								console.log(timeseries);
-								console.log("timeseries metric: " + timeseries['metric']);
+			url : metricUri,
+			dataType : 'json',
+			success : function(data) {
+				if (data != null) {
+					for (var int = 0; int < data.length; int++) {
+						var timeseries = data[int];
+						console.log("timeseries: ");
+						console.log(timeseries);
+						console.log("timeseries metric: " + timeseries['metric']);
 
-								Object.keys(timeseries['dps']).forEach(function (key) {
-									console.log(key + ":" + timeseries['dps'][key]);
-									// Initialise entry with static fields
-									var entry = {
-											'metric' : timeseries['metric'],
-											'timestamp': key,
-											'value' : timeseries['dps'][key],
-									}
-									// Add tags
-									Object.keys(tags).forEach( function(t) {
-										console.log("Adding tag " + t + " to datapoint");
-										entry[t] = timeseries['tags'][t];
-									});
-									dataToReturn.push(entry);
-								})
+						Object.keys(timeseries['dps']).forEach(function (key) {
+							console.log(key + ":" + timeseries['dps'][key]);
+							// Initialise entry with static fields
+							var entry = {
+								'metric' : timeseries['metric'],
+								'timestamp': key,
+								'value' : timeseries['dps'][key],
 							}
-
-							tableau.dataCallback(dataToReturn, lastRecordToken,
-									false);
-						
-//						if (data != null && data[0] != null && data[0]['dps'] != null) {
-//							console.log("data is not null");
-//							console.log(data);
-//							var timeSeries = data[0]['dps'];
-//							for ( var i in timeSeries) {
-//								var entry = {
-//									'metric' : metric,
-//									'timestamp' : timeConverter(i),
-//									'value' : timeSeries[i]
-//								};
-//								dataToReturn.push(entry);
-//							}
-//							tableau.dataCallback(dataToReturn, lastRecordToken,
-//									false);
-						} else {
-							tableau
-									.abortWithError("No results found for metric: "
-											+ metric);
-						}
-					},
-					error : function(xhr, ajaxOptions, thrownError) {
-						// If the connection fails, log the error and return an empty set
-						tableau.log("Connection error: " + xhr.responseText + "\n" + thrownError);
-						tableau.abortWithError("Error while trying to connect to OpenTSDB.");
+							// Add tags
+							Object.keys(tags).forEach( function(t) {
+//								console.log("Adding tag " + t + " to datapoint");
+								entry[t] = timeseries['tags'][t];
+							});
+							dataToReturn.push(entry);
+						})
 					}
-				});
+
+					tableau.dataCallback(dataToReturn, lastRecordToken,	false);
+				} else {
+					tableau.abortWithError("No results found for metric: " + metric);
+				}
+			},
+			error : function(xhr, ajaxOptions, thrownError) {
+				// If the connection fails, log the error and return an empty set
+				tableau.log("Connection error: " + xhr.responseText + "\n" + thrownError);
+				tableau.abortWithError("Error while trying to connect to OpenTSDB.");
+			}
+		});
 	};
 	
 	myConnector.getColumnHeaders = function() {
@@ -153,11 +128,6 @@ function buildTagsHtml(tags) {
 	}
 
 	tableau.registerConnector(myConnector);
-	//myConnector.init = function() {
-	//	tableau.initCallback;
-	//	tableau.submit;
-	//};
-
 })();
 
 $(document).ready(function() {
@@ -176,8 +146,6 @@ $(document).ready(function() {
 		// Gather current tag names/values from HTML (capture any fields modified by user)
 		var tags = {};		
 		$(".tagName").map( function(i, el) {
-//			console.log("Tag name is: " + $("#tagName" + i).val());
-//			console.log("Tag value is: " + $("#tagVal" + i).val());
 			tags[$("#tagName" + i).val()] = $("#tagVal" + i).val();
 		})
 		
@@ -220,27 +188,16 @@ $(document).ready(function() {
 		}
 		
 		jQuery.getJSON(etagsUri, function(data) {
-//				console.log("(Inside getJSON) data: ");
-//				console.log(tags);
-//				console.log(data['etags'][0]);
-				
-				// Compare current tag names to what is returned from etags, add missing tag names (with tag value 
-				// initially set to empty)
-//				console.log("Retrieved tags:");
-//				console.log(data['etags'][0]);
-				data['etags'][0].forEach( function(tagName) {
-						if ( ! (tagName in tags) ) {
-							tags[tagName] = '';
-//							console.log("Added '" + tagName + "' to tags");
-						}
-					}
-				)
-//				console.log("After query:")
-//				console.log(tags);
-				$('#tags').replaceWith(buildTagsHtml(tags));
-				registerCallbacks();
-			}
-		)
+			// Compare current tag names to what is returned from etags, add missing tag names (with tag value 
+			// initially set to empty)
+			data['etags'][0].forEach( function(tagName) {
+				if ( ! (tagName in tags) ) {
+					tags[tagName] = '';
+				}
+			})
+			$('#tags').replaceWith(buildTagsHtml(tags));
+			registerCallbacks();
+		});
 	}
 	
 	$("#submitButton").click(function() {
