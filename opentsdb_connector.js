@@ -42,8 +42,18 @@ function buildTagsHtml(tags) {
 			'<input class="tagVal" type="text" id="tagVal' + i + '" value="' + tags[t] + '"/>' + 
 			'</div>';
 	}).join('') + '</div>';
-	console.log('tagsHtml: ' + tagsHtml);
+//	console.log('tagsHtml: ' + tagsHtml);
 	return tagsHtml;
+}
+
+function getTagsFromHtml() {
+	// Gather current tag names/values from HTML (capture any fields modified by user)
+	var tags = {};		
+	$(".tagName").map( function(i, el) {
+		tags[$("#tagName" + i).val()] = $("#tagVal" + i).val();
+	})
+	
+	return tags;
 }
 
 (function() {
@@ -130,63 +140,55 @@ function buildTagsHtml(tags) {
 	tableau.registerConnector(myConnector);
 })();
 
+function focusOnTags(focus) {
+	console.log("Applying focus... (" + focus + ")");
+	$(focus).focus();
+}
+
 $(document).ready(function() {
 	var startTime;
 	var endTime;
 	var tags;
 	var metric;
-		
+	var focus = "input#tagVal0.tagVal"; // Initial focus 
+	
 	// Define initial set of tags and insert into HTML
 	var tags = { 'host': '*' };
 	$('#tags').replaceWith(buildTagsHtml(tags));
 	
 	console.log("$(document).ready(...) called");
-	
-	function getTagsFromHtml() {
-		// Gather current tag names/values from HTML (capture any fields modified by user)
-		var tags = {};		
-		$(".tagName").map( function(i, el) {
-			tags[$("#tagName" + i).val()] = $("#tagVal" + i).val();
-		})
 		
-		return tags;
-	}
-	
 	function registerCallbacks() {
-		$('#tagVal1').focus(function() {
-		    console.log('in');
-		}).blur(function() {
-		    console.log('out');
-		    updatePage(tags);
+		$("input.tagVal").focus( function(e) {
+			focus = e.target.localName + "#" + e.target.id + "." + e.target.className;
+//			console.log("Focus set to " + focus);
 		});
-
-		// Register callback for when focus enters or exits one of the input fields (name or value), call updatePage() the focus exits
-		$("input.tagVal").focus(function() {
-		    console.log('in');
-		}).blur(function() {
-		    console.log('out');
+		
+		$("input.tagVal").blur( function(e) {
+//		    console.log('out');
 		    updatePage(tags);
-		});
+		});	
 	}
-	
+		
 	function updatePage(tags) {
-		var etagsUri;
-		console.log("updatePage() called");
+//		console.log("updatePage() called");
+//		console.trace();		
+//		console.log('focus: ');
+//		console.log(focus);
 		
 		metric = $('#metric').val().trim();
 		console.log("Metric is " + metric);
 		startTime = $('#start_datetime').data('date');
 		endTime = $('#end_datetime').data('date');
-		
-		etagsUri = buildEtagsUri("127.0.0.1", "4242", metric, startTime, endTime);
-//		console.log("etagsUri: " + etagsUri);
+
 		tags = getTagsFromHtml();
-		
-		// Ensure there's a blank tag name/value pair in tags
+		// Ensure there's a blank tag name/value pair in tags, this allow a space for new tags to be entered
 		if ( ! $.inArray(' ', tags) > -1 ) {
 			tags[''] = '';
 		}
 		
+		var etagsUri = buildEtagsUri("127.0.0.1", "4242", metric, startTime, endTime);
+//		console.log("etagsUri: " + etagsUri);		
 		jQuery.getJSON(etagsUri, function(data) {
 			// Compare current tag names to what is returned from etags, add missing tag names (with tag value 
 			// initially set to empty)
@@ -196,8 +198,13 @@ $(document).ready(function() {
 				}
 			})
 			$('#tags').replaceWith(buildTagsHtml(tags));
+			
 			registerCallbacks();
 		});
+		
+		if (focus) {
+			$('#tags').ready(function() { console.log("#tags ready! Sleeping..."); setTimeout( function() { focusOnTags(focus); }, 100) });
+		}
 	}
 	
 	$("#submitButton").click(function() {
@@ -216,8 +223,8 @@ $(document).ready(function() {
 			}
 		}
 
-		console.log("After submit, tags: ");
-		console.log(tags);
+//		console.log("After submit, tags: ");
+//		console.log(tags);
 		
 		if (metric) {
 			tableau.connectionName = "Data for metric: " + metric;
@@ -229,5 +236,6 @@ $(document).ready(function() {
 
 	// call 'updatePage()' when page has loaded to update tags
 	updatePage(tags);
+	// Re-register callback functions for focus() and blur()
 	registerCallbacks();
 });
