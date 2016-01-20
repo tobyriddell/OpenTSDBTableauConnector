@@ -1,3 +1,6 @@
+// Notes:
+// Debugging output may be captured with console.log() and tableau.log()
+
 $(function() {
 	$('#start_datetime').datetimepicker({ format: 'YYYY/MM/DD-HH:mm:ss'	});
 });
@@ -42,7 +45,6 @@ function buildTagsHtml(tags) {
 			'<input class="tagVal" type="text" id="tagVal' + i + '" value="' + tags[t] + '"/>' + 
 			'</div>';
 	}).join('') + '</div>';
-//	console.log('tagsHtml: ' + tagsHtml);
 	return tagsHtml;
 }
 
@@ -79,9 +81,6 @@ function getTagsFromHtml() {
 
 		var metricUri = buildOpenTSDBUri(server, port, metric, startTime, endTime, tags);
 		var etagsUri  = buildEtagsUri(server, port, metric, startTime, endTime);
-		
-//		console.log(metricUri);
-//		tableau.log(metricUri);
 
 		var xhr = $.ajax({
 			url : metricUri,
@@ -90,27 +89,43 @@ function getTagsFromHtml() {
 				if (data != null) {
 					for (var int = 0; int < data.length; int++) {
 						var timeseries = data[int];
-						console.log("timeseries: ");
-						console.log(timeseries);
-						console.log("timeseries metric: " + timeseries['metric']);
 
 						Object.keys(timeseries['dps']).forEach(function (key) {
-							console.log(key + ":" + timeseries['dps'][key]);
-							// Initialise entry with static fields
+							var d_num = new Number(key);
+							var d;
+							// Check if timestamp is in milliseconds, if not multiply it by 1,000 to convert to milliseconds
+							if (d_num > 20000000000) {
+								d = new Date(d_num);
+							} else {
+								d = new Date(d_num*1000);
+							}
+							
+							// timeStr should end up looking like this: yyyy-MM-dd HH:mm:ss.SSS
+							var timeStr = d.getFullYear()
+								+ "-" + (d.getMonth() + 1)
+								+ "-" + ("0" + d.getDate()).substr(-2)
+								+ " " + ("0" + d.getHours()).substr(-2)
+								+ ":" + ("0" + d.getMinutes()).substr(-2)
+								+ ":" + ("0" + d.getSeconds()).substr(-2);
+							
+							// TODO: Test treatment of milliseconds with data with milliseconds granularity timestamps
+							if (d.getMilliseconds() != 0.0) {
+								timeStr += "." + String(d.getMilliseconds()).substr(1);
+							}
+							
+							// Initialise entry with the static fields
 							var entry = {
 								'metric' : timeseries['metric'],
-								'timestamp': key,
+								'timestamp': timeStr,
 								'value' : timeseries['dps'][key],
 							}
 							// Add tags
 							Object.keys(tags).forEach( function(t) {
-//								console.log("Adding tag " + t + " to datapoint");
 								entry[t] = timeseries['tags'][t];
 							});
 							dataToReturn.push(entry);
 						})
 					}
-
 					tableau.dataCallback(dataToReturn, lastRecordToken,	false);
 				} else {
 					tableau.abortWithError("No results found for metric: " + metric);
@@ -141,7 +156,6 @@ function getTagsFromHtml() {
 })();
 
 function focusOnTags(focus) {
-	console.log("Applying focus... (" + focus + ")");
 	$(focus).focus();
 }
 
@@ -155,29 +169,19 @@ $(document).ready(function() {
 	// Define initial set of tags and insert into HTML
 	var tags = { 'host': '*' };
 	$('#tags').replaceWith(buildTagsHtml(tags));
-	
-	console.log("$(document).ready(...) called");
 		
 	function registerCallbacks() {
 		$("input.tagVal").focus( function(e) {
 			focus = e.target.localName + "#" + e.target.id + "." + e.target.className;
-//			console.log("Focus set to " + focus);
 		});
 		
 		$("input.tagVal").blur( function(e) {
-//		    console.log('out');
 		    updatePage(tags);
 		});	
 	}
 		
 	function updatePage(tags) {
-//		console.log("updatePage() called");
-//		console.trace();		
-//		console.log('focus: ');
-//		console.log(focus);
-		
 		metric = $('#metric').val().trim();
-		console.log("Metric is " + metric);
 		startTime = $('#start_datetime').data('date');
 		endTime = $('#end_datetime').data('date');
 
@@ -188,7 +192,6 @@ $(document).ready(function() {
 		}
 		
 		var etagsUri = buildEtagsUri("127.0.0.1", "4242", metric, startTime, endTime);
-//		console.log("etagsUri: " + etagsUri);		
 		jQuery.getJSON(etagsUri, function(data) {
 			// Compare current tag names to what is returned from etags, add missing tag names (with tag value 
 			// initially set to empty)
@@ -203,7 +206,7 @@ $(document).ready(function() {
 		});
 		
 		if (focus) {
-			$('#tags').ready(function() { console.log("#tags ready! Sleeping..."); setTimeout( function() { focusOnTags(focus); }, 100) });
+			$('#tags').ready(function() { setTimeout( function() { focusOnTags(focus); }, 100) });
 		}
 	}
 	
@@ -223,9 +226,6 @@ $(document).ready(function() {
 			}
 		}
 
-//		console.log("After submit, tags: ");
-//		console.log(tags);
-		
 		if (metric) {
 			tableau.connectionName = "Data for metric: " + metric;
 			tableau.connectionData = JSON.stringify({'server': server, 'port': port, 'metric': metric, 
