@@ -102,7 +102,7 @@ function getTagsFromHtml() {
 							
 							// timeStr should end up looking like this: yyyy-MM-dd HH:mm:ss.SSS
 							var timeStr = d.getFullYear()
-								+ "-" + (d.getMonth() + 1)
+								+ "-" + ("0" + (date.getMonth() + 1)).substr(-2)
 								+ "-" + ("0" + d.getDate()).substr(-2)
 								+ " " + ("0" + d.getHours()).substr(-2)
 								+ ":" + ("0" + d.getMinutes()).substr(-2)
