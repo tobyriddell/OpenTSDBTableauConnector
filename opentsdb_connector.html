@@ -1,0 +1,52 @@
+<html>
+<meta http-equiv="Cache-Control" content="no-store" />
+<head>
+  <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+  <meta content="utf-8" http-equiv="encoding">
+  <title>OpenTSDB Tableau connector</title>
+  <script src="js/tableauwdc-1.1.0.js" type="text/javascript"></script>
+  <script src="js/jquery-1.11.1.min.js" type="text/javascript"></script>
+  <script src="moment.js" type="text/javascript"></script>
+  <script src="bootstrap.min.js" type="text/javascript"></script>
+  <script src="bootstrap-datetimepicker.min.js" type="text/javascript"></script>
+  <script src="opentsdb_connector.js" type="text/javascript"></script>
+  <link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+  <link rel="stylesheet" type="text/css" href="bootstrap-datetimepicker.min.css">
+  <link rel="stylesheet" type="text/css" href="opentsdb_connector.css">
+</head>
+<body>
+	<p>
+		Server:
+	<input type='text' id='server' value='127.0.0.1'/>
+	</p>
+	<p>
+		Port:
+	<input type='text' id='port' value='4242'/>
+	</p>
+	<p>
+		Start:
+	</p>
+	<div class='input-group date' id='start_datetime'>
+		<input type='text' class="form-control start_time" name="start_time" value="2015/10/29-06:58:09"/>
+		<span class="input-group-addon">
+			<span class="glyphicon glyphicon-calendar"></span>
+		</span>
+	</div>
+	<p>
+		End:
+	</p>
+	<div class='input-group date' id='end_datetime'>
+		<input type='text' class="form-control end_time" name="end_time" value="2015/10/29-07:12:28"/>
+		<span class="input-group-addon">
+			<span class="glyphicon glyphicon-calendar"></span>
+		</span>
+	</div>
+	<p>
+		Enter the name of the metric: <input type="text" id="metric" value="proc.stat.cpu"/>
+	</p>
+	<div id="tags"></div>
+	<p>
+		<button type="button" id="submitButton">Get the data</button>
+	</p>
+</body>
+</html>
