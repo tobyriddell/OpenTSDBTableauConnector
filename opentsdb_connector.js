@@ -1,6 +1,4 @@
-// Notes:
 // Debugging output may be captured with console.log() and tableau.log()
-
 $(function() {
 	$('#start_datetime').datetimepicker({ format: 'YYYY/MM/DD-HH:mm:ss'	});
 });
@@ -39,7 +37,13 @@ function buildEtagsUri(server, port, metric, startTime, endTime) {
 function buildTagsHtml(tags) {
 	// Build HTML from preamble, tags and postamble
 	var tagsHtml = '<div id="tags"><p>Tags:</p><div class="tags">' +
-		Object.keys(tags).sort().map( function(t, i) {
+		Object.keys(tags).sort(function(a, b) {
+			if (a == ' ') { 
+				return 1;
+			} else {
+				return a - b;
+			}
+		}).map( function(t, i) {
 		return '<div class="tagLine">' + 
 			'<input class="tagName" type="text" id="tagName' + i + '" value="' + t + '"/>' +
 			'<input class="tagVal" type="text" id="tagVal' + i + '" value="' + tags[t] + '"/>' + 
@@ -57,6 +61,7 @@ function getTagsFromHtml() {
 	
 	return tags;
 }
+
 
 (function() {
 	// TODO: Need to add more parameters here - e.g. tags (and their values), rate (true/false)	
@@ -100,15 +105,16 @@ function getTagsFromHtml() {
 								d = new Date(d_num*1000);
 							}
 							
+							// TOOD: support relative times, e.g. 1h-ago, now
 							// timeStr should end up looking like this: yyyy-MM-dd HH:mm:ss.SSS
 							var timeStr = d.getFullYear()
-								+ "-" + ("0" + (date.getMonth() + 1)).substr(-2)
+								+ "-" + ("0" + (d.getMonth() + 1)).substr(-2)
 								+ "-" + ("0" + d.getDate()).substr(-2)
 								+ " " + ("0" + d.getHours()).substr(-2)
 								+ ":" + ("0" + d.getMinutes()).substr(-2)
 								+ ":" + ("0" + d.getSeconds()).substr(-2);
 							
-							// TODO: Test treatment of milliseconds with data with milliseconds granularity timestamps
+							// TODO: Test treatment of milliseconds with data having millisecond-granularity timestamps
 							if (d.getMilliseconds() != 0.0) {
 								timeStr += "." + String(d.getMilliseconds()).substr(1);
 							}
@@ -155,8 +161,27 @@ function getTagsFromHtml() {
 	tableau.registerConnector(myConnector);
 })();
 
-function focusOnTags(focus) {
-	$(focus).focus();
+function updatePage() {
+	metric = $('#metric').val().trim();
+	startTime = $('#start_datetime').data('date');
+	endTime = $('#end_datetime').data('date');
+
+	tags = getTagsFromHtml();
+	// Ensure there's a blank tag name/value pair in tags, this allow a space for new tags to be entered
+	if ( ! $.inArray(' ', tags) > -1 ) {
+		tags[' '] = '';
+	}
+	var etagsUri = buildEtagsUri("127.0.0.1", "4242", metric, startTime, endTime);
+	jQuery.getJSON(etagsUri, function(data) {
+		// Compare current tag names to what is returned from etags, add missing tag names (with tag value 
+		// initially set to empty)
+		data['etags'][0].forEach( function(tagName) {
+			if ( ! (tagName in tags) ) {
+				tags[tagName] = '';
+			}
+		})
+		$('#tags').replaceWith(buildTagsHtml(tags));
+	});
 }
 
 $(document).ready(function() {
@@ -164,52 +189,11 @@ $(document).ready(function() {
 	var endTime;
 	var tags;
 	var metric;
-	var focus = "input#tagVal0.tagVal"; // Initial focus 
 	
 	// Define initial set of tags and insert into HTML
 	var tags = { 'host': '*' };
 	$('#tags').replaceWith(buildTagsHtml(tags));
 		
-	function registerCallbacks() {
-		$("input.tagVal").focus( function(e) {
-			focus = e.target.localName + "#" + e.target.id + "." + e.target.className;
-		});
-		
-		$("input.tagVal").blur( function(e) {
-		    updatePage(tags);
-		});	
-	}
-		
-	function updatePage(tags) {
-		metric = $('#metric').val().trim();
-		startTime = $('#start_datetime').data('date');
-		endTime = $('#end_datetime').data('date');
-
-		tags = getTagsFromHtml();
-		// Ensure there's a blank tag name/value pair in tags, this allow a space for new tags to be entered
-		if ( ! $.inArray(' ', tags) > -1 ) {
-			tags[''] = '';
-		}
-		
-		var etagsUri = buildEtagsUri("127.0.0.1", "4242", metric, startTime, endTime);
-		jQuery.getJSON(etagsUri, function(data) {
-			// Compare current tag names to what is returned from etags, add missing tag names (with tag value 
-			// initially set to empty)
-			data['etags'][0].forEach( function(tagName) {
-				if ( ! (tagName in tags) ) {
-					tags[tagName] = '';
-				}
-			})
-			$('#tags').replaceWith(buildTagsHtml(tags));
-			
-			registerCallbacks();
-		});
-		
-		if (focus) {
-			$('#tags').ready(function() { setTimeout( function() { focusOnTags(focus); }, 100) });
-		}
-	}
-	
 	$("#submitButton").click(function() {
 		metric = $('#metric').val().trim();
 		startTime = $('#start_datetime').data('date');
@@ -233,9 +217,4 @@ $(document).ready(function() {
 			tableau.submit();
 		}
 	});
-
-	// call 'updatePage()' when page has loaded to update tags
-	updatePage(tags);
-	// Re-register callback functions for focus() and blur()
-	registerCallbacks();
 });
