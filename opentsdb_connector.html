@@ -27,7 +27,7 @@
 		Start:
 	</p>
 	<div class='input-group date' id='start_datetime'>
-		<input type='text' class="form-control start_time" name="start_time" value="2015/10/29-06:58:09"/>
+		<input type='text' class="form-control start_time" name="start_time" value="2016/03/13-14:00:00"/>
 		<span class="input-group-addon">
 			<span class="glyphicon glyphicon-calendar"></span>
 		</span>
@@ -36,13 +36,13 @@
 		End:
 	</p>
 	<div class='input-group date' id='end_datetime'>
-		<input type='text' class="form-control end_time" name="end_time" value="2015/10/29-07:12:28"/>
+		<input type='text' class="form-control end_time" name="end_time" value="2016/03/13-14:30:00"/>
 		<span class="input-group-addon">
 			<span class="glyphicon glyphicon-calendar"></span>
 		</span>
 	</div>
 	<p>
-		Enter the name of the metric: <input type="text" id="metric" value="proc.stat.cpu"/>
+		Enter the name of the metric: <input type="text" id="metric" onchange="updatePage()"/>
 	</p>
 	<div id="tags"></div>
 	<p>
